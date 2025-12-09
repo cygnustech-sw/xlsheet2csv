@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+.venv/
+
+# PowerShell artefacts
+*.pshistory
+
+# Logs and exports
+csv-export/
+*.log
+
+# Virtual environments
+env/
+venv/
+
+# OS-specific
+.DS_Store
+Thumbs.db

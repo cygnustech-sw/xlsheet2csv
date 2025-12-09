@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xlsheet2csv"
+version = "0.1.0"
+description = "Export XLSX worksheets to individual CSV files (pandas-based CLI)"
+authors = [
+    { name = "xlsheet2csv contributors" }
+]
+readme = "../README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=2.0",
+    "openpyxl>=3.1"
+]
+
+[project.scripts]
+xlsheet2csv = "xlsheet2csv.cli:main"
