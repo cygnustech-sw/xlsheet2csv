@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xlsheet2csv"
+version = "1.0.0"
+description = "Deterministic local extraction of XLSX worksheets to CSV with manifests and integrity hashes"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Cygnus Tech Consulting Ltd", email = "hello@cygnustech.co.uk" }
+]
+keywords = ["xlsx", "csv", "excel", "conversion", "infrastructure"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Office/Business :: Financial :: Spreadsheet",
+    "Topic :: System :: Systems Administration"
+]
+dependencies = [
+    "defusedxml>=0.7.1,<1",
+    "openpyxl>=3.1.5,<4"
+]
+
+[project.optional-dependencies]
+dev = [
+    "build>=1.2,<2",
+    "ruff>=0.12,<1"
+]
+
+[project.urls]
+Homepage = "https://www.cygnustech.co.uk/tools"
+Repository = "https://github.com/cygnustech-sw/xlsheet2csv"
+Issues = "https://github.com/cygnustech-sw/xlsheet2csv/issues"
+
+[project.scripts]
+xlsheet2csv = "xlsheet2csv.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]

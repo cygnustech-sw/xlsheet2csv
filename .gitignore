@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.python-version
+.venv/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+
+# PowerShell artefacts
+*.pshistory
+
+# Logs and exports
+csv-export/
+*.log
+
+# Virtual environments
+env/
+venv/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
