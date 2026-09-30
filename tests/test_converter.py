@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import unittest
+import zipfile
 from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import patch
@@ -32,6 +33,16 @@ def write_workbook(path: Path, marker: str = "value", leading_zero: str = "00123
     worksheet.append([leading_zero, marker])
     workbook.save(path)
     workbook.close()
+
+
+def add_archive_member(path: Path, member_name: str, payload: bytes) -> None:
+    """Rewrite the archive so it also contains ``member_name`` with ``payload``."""
+    with zipfile.ZipFile(path) as archive:
+        entries = [(info.filename, archive.read(info.filename)) for info in archive.infolist()]
+    with zipfile.ZipFile(path, "w") as archive:
+        for name, data in entries:
+            archive.writestr(name, data)
+        archive.writestr(member_name, payload)
 
 
 class ConverterTests(unittest.TestCase):
@@ -190,6 +201,43 @@ class ConverterTests(unittest.TestCase):
                 with self.subTest(message=message):
                     with self.assertRaisesRegex(InputLimitError, message):
                         validate_workbook_archive(workbook_path, limits)
+
+    def test_normal_workbook_passes_declared_member_size_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workbook_path = Path(temporary) / "report.xlsx"
+            write_workbook(workbook_path)
+
+            result = validate_workbook_archive(workbook_path, InputLimits())
+
+            self.assertEqual(result["archive_members"], 9)
+            self.assertEqual(result["expanded_bytes"], sum(
+                info.file_size for info in zipfile.ZipFile(workbook_path).infolist()
+            ))
+
+    def test_member_exceeding_declared_size_limit_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            workbook_path = Path(temporary) / "report.xlsx"
+            write_workbook(workbook_path)
+            add_archive_member(workbook_path, "large-padding.bin", os.urandom(3 * 1024 * 1024))
+            limits = InputLimits(max_member_bytes=1024 * 1024)
+
+            with self.assertRaisesRegex(InputLimitError, "large-padding.bin.*declares a decompressed size"):
+                validate_workbook_archive(workbook_path, limits)
+
+    def test_declared_size_limit_fails_through_conversion_result(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            write_workbook(root / "report.xlsx")
+            add_archive_member(root / "report.xlsx", "large-padding.bin", os.urandom(3 * 1024 * 1024))
+            limits = InputLimits(max_member_bytes=1024 * 1024)
+
+            manifest, exit_code, _ = convert_path(root / "report.xlsx", root / "output", limits=limits)
+
+            self.assertEqual(exit_code, 1)
+            self.assertEqual(manifest["success_count"], 0)
+            self.assertEqual(manifest["failures"][0]["error_type"], "InputLimitError")
+            self.assertIn("declares a decompressed size", manifest["failures"][0]["message"])
+            self.assertFalse(any(path.is_dir() for path in (root / "output").iterdir()))
 
     def test_invalid_source_does_not_create_output_root(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

@@ -7,7 +7,7 @@
 - Recursive discovery excludes the selected output root.
 - Directory discovery ignores symlinks that resolve outside the requested input tree.
 - Validation, hashing and worksheet parsing share one open input handle, so an atomic path replacement cannot substitute unchecked bytes or make the manifest describe a different workbook.
-- Input archives must pass compressed-size, expanded-size and compression-ratio limits before openpyxl parses them.
+- Input archives must pass compressed-size, expanded-size, per-member declared-size and compression-ratio limits before openpyxl parses them. The per-member limit applies to the uncompressed size each member declares in the central directory.
 - Archive member count and central-directory byte size are checked with a bounded preflight before Python materialises ZIP metadata or parses workbook XML. ZIP64 and multi-disk archives are rejected within this tool's lower XLSX size limits.
 - XML parsing uses the installed `defusedxml` protection supported by openpyxl.
 

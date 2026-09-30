@@ -56,6 +56,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--delimiter", choices=tuple(DELIMITERS), default="comma")
     parser.add_argument("--max-file-mib", type=int, default=512)
     parser.add_argument("--max-expanded-mib", type=int, default=2048)
+    parser.add_argument("--max-member-mib", type=int, default=1024)
     parser.add_argument("--max-compression-ratio", type=float, default=250.0)
     parser.add_argument("--json", action="store_true", help="Write the run result as JSON to stdout.")
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -70,7 +71,12 @@ def default_output_root(source: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.max_file_mib <= 0 or args.max_expanded_mib <= 0 or args.max_compression_ratio <= 0:
+    if (
+        args.max_file_mib <= 0
+        or args.max_expanded_mib <= 0
+        or args.max_member_mib <= 0
+        or args.max_compression_ratio <= 0
+    ):
         parser.error("Input limits must be greater than zero.")
 
     policy = ConversionPolicy(
@@ -83,6 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     limits = InputLimits(
         max_file_bytes=args.max_file_mib * 1024 * 1024,
         max_expanded_bytes=args.max_expanded_mib * 1024 * 1024,
+        max_member_bytes=args.max_member_mib * 1024 * 1024,
         max_compression_ratio=args.max_compression_ratio,
     )
     output_root = args.output_root or default_output_root(args.source)

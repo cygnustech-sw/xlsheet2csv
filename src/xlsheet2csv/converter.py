@@ -72,6 +72,7 @@ class ConversionPolicy:
 class InputLimits:
     max_file_bytes: int = 512 * 1024 * 1024
     max_expanded_bytes: int = 2 * 1024 * 1024 * 1024
+    max_member_bytes: int = 1024 * 1024 * 1024
     max_compression_ratio: float = 250.0
     max_archive_members: int = 20_000
     max_central_directory_bytes: int = 64 * 1024 * 1024
@@ -238,17 +239,23 @@ def validate_workbook_archive(
             raise ConversionError("Encrypted XLSX archives are not supported.")
         expanded_size = sum(member.file_size for member in members)
         compressed_size = sum(member.compress_size for member in members)
+        if expanded_size > limits.max_expanded_bytes:
+            raise InputLimitError(
+                f"Expanded workbook is {expanded_size} bytes; limit is {limits.max_expanded_bytes} bytes."
+            )
+        compression_ratio = expanded_size / max(compressed_size, 1)
+        if compression_ratio > limits.max_compression_ratio:
+            raise InputLimitError(
+                f"Workbook compression ratio is {compression_ratio:.1f}; limit is {limits.max_compression_ratio:.1f}."
+            )
+        for member in members:
+            if member.file_size > limits.max_member_bytes:
+                raise InputLimitError(
+                    f"Archive member {member.filename!r} declares a decompressed size of "
+                    f"{member.file_size} bytes; limit is {limits.max_member_bytes} bytes."
+                )
     handle.seek(0)
 
-    if expanded_size > limits.max_expanded_bytes:
-        raise InputLimitError(
-            f"Expanded workbook is {expanded_size} bytes; limit is {limits.max_expanded_bytes} bytes."
-        )
-    compression_ratio = expanded_size / max(compressed_size, 1)
-    if compression_ratio > limits.max_compression_ratio:
-        raise InputLimitError(
-            f"Workbook compression ratio is {compression_ratio:.1f}; limit is {limits.max_compression_ratio:.1f}."
-        )
     return {
         "file_bytes": file_size,
         "expanded_bytes": expanded_size,
