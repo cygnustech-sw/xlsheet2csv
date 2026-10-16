@@ -5,6 +5,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 import os
 import shutil
 import struct
@@ -80,6 +81,8 @@ class InputLimits:
     max_columns_per_sheet: int = 16_384
 
     def validate(self) -> None:
+        if not math.isfinite(self.max_compression_ratio):
+            raise ValueError("max_compression_ratio must be a finite number.")
         for name, value in asdict(self).items():
             if value <= 0:
                 raise ValueError(f"{name} must be greater than zero.")

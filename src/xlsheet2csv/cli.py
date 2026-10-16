@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -70,6 +71,8 @@ def default_output_root(source: Path) -> Path:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+    if not math.isfinite(args.max_compression_ratio):
+        parser.error("--max-compression-ratio must be a finite number.")
     if args.max_file_mib <= 0 or args.max_expanded_mib <= 0 or args.max_compression_ratio <= 0:
         parser.error("Input limits must be greater than zero.")
 
