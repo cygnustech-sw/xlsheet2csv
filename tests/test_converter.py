@@ -210,18 +210,22 @@ class ConverterTests(unittest.TestCase):
             write_workbook(replacement, marker="REPLACEMENT")
             original_hash = sha256_file(source)
 
+            replacement_blocked = []
+
             def replace_after_hash(handle):
                 result = sha256_stream(handle)
                 try:
                     os.replace(replacement, source)
                 except PermissionError:
-                    self.skipTest("The platform prevents replacement of an open input file.")
+                    replacement_blocked.append(True)
                 return result
 
             with patch("xlsheet2csv.converter.sha256_stream", side_effect=replace_after_hash):
                 manifest, exit_code, _ = convert_path(source, root / "output")
 
             self.assertEqual(exit_code, 0)
+            if replacement_blocked:
+                self.skipTest("The platform prevents replacement of an open input file.")
             output = root / "output" / manifest["successes"][0]["output_directory"]
             workbook_manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
             self.assertEqual(workbook_manifest["source"]["sha256"], original_hash)
