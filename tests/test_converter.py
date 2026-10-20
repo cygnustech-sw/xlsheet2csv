@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import csv
+import io
 import json
 import os
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from datetime import date, datetime
 from pathlib import Path
 from unittest.mock import patch
 
 from openpyxl import Workbook
 
+from xlsheet2csv import __version__
+from xlsheet2csv.cli import main as cli_main
 from xlsheet2csv.converter import (
     ConversionError,
     ConversionPolicy,
@@ -233,6 +237,17 @@ class ConverterTests(unittest.TestCase):
                 rows = list(csv.reader(handle))
             self.assertIn(["00123", "ORIGINAL"], rows)
             self.assertNotIn(["00123", "REPLACEMENT"], rows)
+
+
+class CommandLineTests(unittest.TestCase):
+    def test_version_flag_reports_package_version(self) -> None:
+        stdout = io.StringIO()
+
+        with redirect_stdout(stdout), self.assertRaises(SystemExit) as raised:
+            cli_main(["--version"])
+
+        self.assertEqual(raised.exception.code, 0)
+        self.assertEqual(stdout.getvalue().split()[-1], __version__)
 
 
 if __name__ == "__main__":
